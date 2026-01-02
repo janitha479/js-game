@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
@@ -58,6 +59,18 @@ const server = http.createServer((req, res) => {
         } else {
             res.writeHead(200, { 'Content-Type': contentType });
             res.end(content);
+        }
+    });
+});
+
+// Minimal WebSocket hub that relays JSON payloads to every other client
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (socket) => {
+    socket.on('message', (rawMessage) => {
+        for (const client of wss.clients) {
+            if (client !== socket && client.readyState === WebSocket.OPEN) {
+                client.send(rawMessage.toString());
+            }
         }
     });
 });

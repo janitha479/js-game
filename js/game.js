@@ -15,8 +15,18 @@ class MultiDisplayGame {
             3: { answers: [], completed: false, allCorrect: false }
         };
         
-        // BroadcastChannel for cross-tab communication
-        this.channel = new BroadcastChannel('multi-display-game');
+        const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : null;
+        this.clientId = (cryptoObj && typeof cryptoObj.randomUUID === 'function')
+            ? cryptoObj.randomUUID()
+            : `client-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        
+        // BroadcastChannel for cross-tab communication when available
+        this.channel = (typeof BroadcastChannel !== 'undefined')
+            ? new BroadcastChannel('multi-display-game')
+            : null;
+        this.socket = null;
+        this.reconnectTimer = null;
+        this.pendingMessages = [];
         
         // DOM Elements
         this.elements = {
@@ -49,8 +59,12 @@ class MultiDisplayGame {
             });
         });
         
-        // Setup BroadcastChannel listener
-        this.channel.onmessage = (event) => this.handleBroadcastMessage(event);
+        // Setup BroadcastChannel listener when supported
+        if (this.channel) {
+            this.channel.onmessage = (event) => this.handleIncomingMessage(event.data);
+        } else {
+            console.warn('BroadcastChannel not available; falling back to WebSocket only');
+        }
         
         // Setup idle layer touch/click
         this.elements.idleLayer.addEventListener('click', () => this.exitIdleMode());
@@ -58,6 +72,8 @@ class MultiDisplayGame {
             e.preventDefault();
             this.exitIdleMode();
         });
+
+        this.setupWebSocket();
     }
     
     selectDisplay(event) {
@@ -155,7 +171,9 @@ class MultiDisplayGame {
         this.selectedAnswers = [];
         
         // Hide waiting overlay
-        this.elements.waitingOverlay.classList.remove('active');
+        if (this.elements.waitingOverlay) {
+            this.elements.waitingOverlay.classList.remove('active');
+        }
         
         // Generate answer buttons with images
         this.elements.answerButtons.innerHTML = '';
@@ -253,15 +271,18 @@ class MultiDisplayGame {
     
     showWaitingScreen() {
         // Show waiting overlay
+        if (!this.elements.waitingOverlay) return;
         this.elements.waitingOverlay.classList.add('active');
         this.updateWaitingStatus();
     }
     
     hideWaitingScreen() {
+        if (!this.elements.waitingOverlay) return;
         this.elements.waitingOverlay.classList.remove('active');
     }
     
     updateWaitingStatus() {
+        if (!this.elements.waitingStatus) return;
         const completedDisplays = Object.entries(this.allDisplaysState)
             .filter(([id, state]) => state.completed)
             .map(([id]) => `Display ${id}`);
@@ -348,12 +369,78 @@ class MultiDisplayGame {
         };
     }
     
+    setupWebSocket() {
+        if (typeof WebSocket === 'undefined') {
+            console.warn('WebSocket not supported in this browser');
+            return;
+        }
+        if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+            return;
+        }
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const endpoint = `${protocol}://${window.location.host}`;
+        try {
+            this.socket = new WebSocket(endpoint);
+        } catch (err) {
+            console.warn('WebSocket initialization failed', err);
+            this.scheduleReconnect();
+            return;
+        }
+        this.socket.addEventListener('open', () => {
+            if (this.reconnectTimer) {
+                clearTimeout(this.reconnectTimer);
+                this.reconnectTimer = null;
+            }
+            console.log('WebSocket connected');
+            while (this.pendingMessages.length) {
+                const queuedMessage = this.pendingMessages.shift();
+                this.socket.send(JSON.stringify(queuedMessage));
+            }
+        });
+        this.socket.addEventListener('message', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleIncomingMessage(data);
+            } catch (err) {
+                console.warn('Invalid WebSocket payload received', err);
+            }
+        });
+        this.socket.addEventListener('close', () => {
+            this.scheduleReconnect();
+        });
+        this.socket.addEventListener('error', () => {
+            if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+                this.socket.close();
+            }
+        });
+    }
+
+    scheduleReconnect() {
+        if (this.reconnectTimer) return;
+        this.reconnectTimer = setTimeout(() => {
+            this.reconnectTimer = null;
+            this.setupWebSocket();
+        }, 2000);
+    }
+
     broadcast(message) {
-        this.channel.postMessage(message);
+        const payload = { ...message, senderId: this.clientId };
+        if (this.channel) {
+            this.channel.postMessage(payload);
+        }
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(payload));
+        } else if (this.socket) {
+            this.pendingMessages.push(payload);
+            if (this.pendingMessages.length > 50) {
+                this.pendingMessages.shift();
+            }
+        }
     }
     
-    handleBroadcastMessage(event) {
-        const message = event.data;
+    handleIncomingMessage(message) {
+        if (!message) return;
+        if (message.senderId && message.senderId === this.clientId) return;
         
         switch (message.type) {
             case 'DISPLAY_READY':
