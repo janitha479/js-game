@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Multi-Display Quiz Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Display Selector Screen -->
+    <div id="selector-screen" class="screen active">
+        <h1>Select Display</h1>
+        <div class="selector-buttons">
+            <button class="selector-btn" data-display="1">Display 1</button>
+            <button class="selector-btn" data-display="2">Display 2</button>
+            <button class="selector-btn" data-display="3">Display 3</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <!-- Idle Video Layer -->
+        <div id="idle-layer" class="layer">
+            <video id="idle-video" loop muted playsinline>
+                <source src="assets/videos/idle.mp4" type="video/mp4">
+            </video>
+            <div class="touch-prompt">Touch to Start</div>
+        </div>
+
+        <!-- Interactive Layer (Image + Questions) -->
+        <div id="interactive-layer" class="layer hidden">
+            <div class="game-container">
+                <!-- Question Title at Top -->
+                <div class="title-section">
+                    <h2 id="display-title"></h2>
+                </div>
+                
+                <!-- Main Display Image -->
+                <div class="main-image-section">
+                    <img id="display-image" src="" alt="Display Image">
+                </div>
+                
+                <!-- Select Answers Label -->
+                <div class="select-label">SELECT 3 ANSWERS</div>
+                
+                <!-- Answer Buttons Grid (2x3) -->
+                <div class="answers-section">
+                    <div class="answer-buttons" id="answer-buttons">
+                        <!-- 6 answer buttons will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Selected Answers at Bottom -->
+                <div class="selected-answers-section">
+                    <div class="selected-label">Your Selected Answers</div>
+                    <div class="selected-slots">
+                        <div class="answer-slot" data-slot="0"></div>
+                        <div class="answer-slot" data-slot="1"></div>
+                        <div class="answer-slot" data-slot="2"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Waiting Overlay -->
+            <div id="waiting-overlay" class="waiting-overlay">
+                <div class="waiting-spinner"></div>
+                <div class="waiting-text">Waiting for other displays...</div>
+                <div class="waiting-status" id="waiting-status"></div>
+            </div>
+        </div>
+
+        <!-- Result Video Layer -->
+        <div id="result-layer" class="layer hidden">
+            <video id="result-video" playsinline>
+                <source id="result-video-source" src="" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
