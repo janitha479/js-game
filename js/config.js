@@ -15,7 +15,8 @@ const GAME_CONFIG = {
     timing: {
         fadeTransition: 500,      // Fade transition duration
         resultVideoDelay: 10000,  // Delay after failure video before returning to idle
-        answerRevealDelay: 500    // Delay before showing answer result
+        answerRevealDelay: 500,   // Delay before showing answer result
+        incorrectFeedbackDuration: 1400 // Duration for wrong-answer glow fade
     },
 
     // Display-specific content configuration

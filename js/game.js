@@ -212,61 +212,64 @@ class MultiDisplayGame {
     }
     
     selectAnswer(answer) {
-        // Check if already selected 3 answers
         if (this.selectedAnswers.length >= 3) return;
-        
-        // Check if this answer was already selected
-        if (this.selectedAnswers.find(a => a.id === answer.id)) return;
-        
-        // Add to selected answers
-        this.selectedAnswers.push(answer);
-        
-        // Update button state
+
+        const alreadySelected = this.selectedAnswers.some(a => a.id === answer.id);
         const btn = document.querySelector(`[data-answer-id="${answer.id}"]`);
+        if (alreadySelected) return;
+
+        if (!answer.correct) {
+            this.handleIncorrectSelection(btn);
+            return;
+        }
+
+        this.selectedAnswers.push(answer);
+
         if (btn) btn.classList.add('selected');
-        
-        // Update slot UI with image
+
         const slotIndex = this.selectedAnswers.length - 1;
         const slot = this.elements.answerSlots[slotIndex];
-        
-        // Create image for slot
-        const img = document.createElement('img');
-        img.src = answer.image;
-        img.alt = answer.id;
-        slot.innerHTML = '';
-        slot.appendChild(img);
-        slot.classList.add('filled');
-        
-        // Check if answer is correct and show glow
-        setTimeout(() => {
-            if (answer.correct) {
+
+        if (slot) {
+            const img = document.createElement('img');
+            img.src = answer.image;
+            img.alt = answer.id;
+            slot.innerHTML = '';
+            slot.appendChild(img);
+            slot.classList.add('filled');
+
+            setTimeout(() => {
                 slot.classList.add('correct');
-            } else {
-                slot.classList.add('incorrect');
-            }
-        }, GAME_CONFIG.timing.answerRevealDelay);
-        
-        // Update display state
-        const allCorrect = this.selectedAnswers.every(a => a.correct);
+            }, GAME_CONFIG.timing.answerRevealDelay);
+        }
+
+        const allCorrect = this.selectedAnswers.length === 3 && this.selectedAnswers.every(a => a.correct);
         this.allDisplaysState[this.displayId] = {
             answers: this.selectedAnswers.map(a => a.id),
             completed: this.selectedAnswers.length === 3,
             allCorrect: allCorrect
         };
-        
-        // Broadcast answer selection
+
         this.broadcast({
             type: 'ANSWER_SELECTED',
             displayId: this.displayId,
             answer: answer,
             state: this.allDisplaysState[this.displayId]
         });
-        
-        // Check if this display completed
+
         if (this.selectedAnswers.length === 3) {
             this.showWaitingScreen();
             this.checkGameCompletion();
         }
+    }
+
+    handleIncorrectSelection(button) {
+        if (!button || button.classList.contains('incorrect')) return;
+        const duration = GAME_CONFIG.timing.incorrectFeedbackDuration || 1400;
+        button.classList.add('incorrect');
+        setTimeout(() => {
+            button.classList.remove('incorrect');
+        }, duration);
     }
     
     showWaitingScreen() {
