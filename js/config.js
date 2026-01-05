@@ -11,20 +11,31 @@ const GAME_CONFIG = {
         failure: 'assets/videos/failure.mp4'  // Lose video (any answer wrong)
     },
 
+    // Transition images shown between questions
+    transitionImages: {
+        afterQuestion1: 'assets/images/ab.png',      // Shown after completing question 1
+        afterQuestion2: 'assets/images/retain.png',  // Shown after completing question 2
+        afterQuestion3: 'assets/images/lock.png'     // Shown after completing question 3
+    },
+
     // Timing configuration (in milliseconds)
     timing: {
         fadeTransition: 500,      // Fade transition duration
         resultVideoDelay: 10000,  // Delay after failure video before returning to idle
         answerRevealDelay: 500,   // Delay before showing answer result
-        incorrectFeedbackDuration: 1400 // Duration for wrong-answer glow fade
+        incorrectFeedbackDuration: 1400, // Duration for wrong-answer glow fade
+        imageVanishDuration: 800,  // Duration for main image to vanish
+        transitionImageDisplay: 4000, // How long to show transition image before loading appears
+        blurTransitionDuration: 600, // Duration for blur effect
+        loadingDelayAfterTransition: 2000 // How long to keep loading visible before advancing
     },
 
-    // Display-specific content configuration
+    // Question configurations (shown sequentially on single display)
     displays: {
         1: {
-            background: 'assets/images/bg.png',   // Background image for display 1
-            image: 'assets/images/display1.png',  // Replace with your image
-            title: '',           // Replace with your title
+            background: 'assets/images/bg.png',
+            image: 'assets/images/display1.png',
+            title: 'Question 1',
             answers: [
                 { id: 'a1', image: 'assets/images/answers/d1_a1.png', correct: true },
                 { id: 'a2', image: 'assets/images/answers/d1_a2.png', correct: false },
@@ -33,13 +44,12 @@ const GAME_CONFIG = {
                 { id: 'a5', image: 'assets/images/answers/d1_a4.png', correct: true },
                 { id: 'a6', image: 'assets/images/answers/d1_a6.png', correct: false }
             ],
-            // Which 3 answers are correct (must match 3 answers with correct: true)
             correctAnswers: ['a1', 'a3', 'a5']
         },
         2: {
-            background: 'assets/images/bg1.png',   // Background image for display 2
-            image: 'assets/images/display2.png',  // Replace with your image
-            title: '',           // Replace with your title
+            background: 'assets/images/bg1.png',
+            image: 'assets/images/display2.png',
+            title: 'Question 2',
             answers: [
                 { id: 'b1', image: 'assets/images/answers/d2_a1.png', correct: false },
                 { id: 'b2', image: 'assets/images/answers/d2_a2.png', correct: true },
@@ -51,9 +61,9 @@ const GAME_CONFIG = {
             correctAnswers: ['b2', 'b3', 'b6']
         },
         3: {
-            background: 'assets/images/bg2.png',   // Background image for display 3
-            image: 'assets/images/display3.png',  // Replace with your image
-            title: '',           // Replace with your title
+            background: 'assets/images/bg2.png',
+            image: 'assets/images/display3.png',
+            title: 'Question 3',
             answers: [
                 { id: 'c1', image: 'assets/images/answers/d3_a1.png', correct: true },
                 { id: 'c2', image: 'assets/images/answers/d3_a2.png', correct: false },

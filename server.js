@@ -2,7 +2,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
@@ -63,23 +62,11 @@ const server = http.createServer((req, res) => {
     });
 });
 
-// Minimal WebSocket hub that relays JSON payloads to every other client
-const wss = new WebSocket.Server({ server });
-wss.on('connection', (socket) => {
-    socket.on('message', (rawMessage) => {
-        for (const client of wss.clients) {
-            if (client !== socket && client.readyState === WebSocket.OPEN) {
-                client.send(rawMessage.toString());
-            }
-        }
-    });
-});
-
 server.listen(PORT, HOST, () => {
     const localIP = getLocalIP();
     console.log(`
 ╔════════════════════════════════════════════════════════════╗
-║         Multi-Display Quiz Game Server                     ║
+║              Quiz Game Server                              ║
 ╠════════════════════════════════════════════════════════════╣
 ║                                                            ║
 ║  Local:   http://localhost:${PORT}                            ║
@@ -88,7 +75,6 @@ server.listen(PORT, HOST, () => {
 ║  ► Use the Network URL on your phone!                      ║
 ║  ► Make sure phone and laptop are on same WiFi             ║
 ║                                                            ║
-║  Open 3 browser tabs and select Display 1, 2, 3            ║
 ║  Press Ctrl+C to stop the server                           ║
 ╚════════════════════════════════════════════════════════════╝
     `);

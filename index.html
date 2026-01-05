@@ -3,22 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Multi-Display Quiz Game</title>
+    <title>Quiz Game</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Display Selector Screen -->
-    <div id="selector-screen" class="screen active">
-        <h1>Select Display</h1>
-        <div class="selector-buttons">
-            <button class="selector-btn" data-display="1">Display 1</button>
-            <button class="selector-btn" data-display="2">Display 2</button>
-            <button class="selector-btn" data-display="3">Display 3</button>
-        </div>
-    </div>
-
     <!-- Game Screen -->
-    <div id="game-screen" class="screen">
+    <div id="game-screen" class="screen active">
         <!-- Idle Video Layer -->
         <div id="idle-layer" class="layer">
             <video id="idle-video" loop muted playsinline>
@@ -61,6 +51,11 @@
                 </div>
             </div>
             
+            <!-- Transition Image Overlay -->
+            <div id="transition-overlay" class="transition-overlay hidden">
+                <img id="transition-image" src="" alt="Transition">
+            </div>
+            
             <!-- Waiting Overlay -->
             <div id="waiting-overlay" class="waiting-overlay">
                 <img class="waiting-image" src="assets/images/bg4.png" alt="Loading">
@@ -70,7 +65,6 @@
                     <span></span><span></span><span></span><span></span>
                 </div>
                 <div class="waiting-text"></div>
-                <div class="waiting-status" id="waiting-status"></div>
             </div>
         </div>
 
