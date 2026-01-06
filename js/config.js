@@ -51,14 +51,14 @@ const GAME_CONFIG = {
             image: 'assets/images/display2.png',
             title: '',
             answers: [
-                { id: 'b1', image: 'assets/images/answers/d2_a1.png', correct: false },
-                { id: 'b2', image: 'assets/images/answers/d2_a2.png', correct: true },
+                { id: 'b1', image: 'assets/images/answers/d2_a1.png', correct: true },
+                { id: 'b2', image: 'assets/images/answers/d2_a2.png', correct: false },
                 { id: 'b3', image: 'assets/images/answers/d2_a3.png', correct: true },
-                { id: 'b4', image: 'assets/images/answers/d2_a4.png', correct: false },
+                { id: 'b4', image: 'assets/images/answers/d2_a4.png', correct: true },
                 { id: 'b5', image: 'assets/images/answers/d2_a5.png', correct: false },
-                { id: 'b6', image: 'assets/images/answers/d2_a6.png', correct: true }
+                { id: 'b6', image: 'assets/images/answers/d2_a6.png', correct: false }
             ],
-            correctAnswers: ['b2', 'b3', 'b6']
+            correctAnswers: ['b1', 'b3', 'b4']
         },
         3: {
             background: 'assets/images/bg2.png',
