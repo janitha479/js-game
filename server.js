@@ -45,6 +45,19 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
     
+    // Set cache headers based on file type
+    let cacheControl = 'no-cache';
+    if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'].includes(ext)) {
+        // Cache images for 1 year (immutable assets)
+        cacheControl = 'public, max-age=31536000, immutable';
+    } else if (['.mp4', '.webm', '.ogg'].includes(ext)) {
+        // Cache videos for 1 year
+        cacheControl = 'public, max-age=31536000, immutable';
+    } else if (['.css', '.js'].includes(ext)) {
+        // Cache CSS/JS for 1 week
+        cacheControl = 'public, max-age=604800';
+    }
+    
     // Read and serve the file
     fs.readFile(filePath, (err, content) => {
         if (err) {
@@ -56,7 +69,10 @@ const server = http.createServer((req, res) => {
                 res.end(`Server Error: ${err.code}`);
             }
         } else {
-            res.writeHead(200, { 'Content-Type': contentType });
+            res.writeHead(200, { 
+                'Content-Type': contentType,
+                'Cache-Control': cacheControl
+            });
             res.end(content);
         }
     });

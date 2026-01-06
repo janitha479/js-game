@@ -3,6 +3,134 @@
  * Shows 3 questions sequentially on one display
  */
 
+// Asset Cache - stores preloaded images and videos
+const AssetCache = {
+    images: new Map(),
+    videos: new Map(),
+    isPreloaded: false,
+    
+    // Preload a single image and store in cache
+    preloadImage(src) {
+        if (this.images.has(src)) {
+            return Promise.resolve(this.images.get(src));
+        }
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                this.images.set(src, img);
+                resolve(img);
+            };
+            img.onerror = reject;
+            img.src = src;
+        });
+    },
+    
+    // Preload a video and store reference
+    preloadVideo(src) {
+        if (this.videos.has(src)) {
+            return Promise.resolve(this.videos.get(src));
+        }
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'auto';
+            video.muted = true;
+            video.oncanplaythrough = () => {
+                this.videos.set(src, video);
+                resolve(video);
+            };
+            video.onerror = reject;
+            video.src = src;
+            video.load();
+        });
+    },
+    
+    // Get cached image or create new one
+    getImage(src) {
+        return this.images.get(src) || null;
+    },
+    
+    // Preload all game assets with progress tracking
+    async preloadAllAssets(onProgress) {
+        if (this.isPreloaded) {
+            if (onProgress) onProgress(100);
+            return;
+        }
+        
+        console.log('[Cache] Starting asset preload...');
+        const startTime = Date.now();
+        
+        // Collect all asset paths
+        const imagePaths = new Set();
+        const videoPaths = [];
+        
+        // Background images
+        for (const key in GAME_CONFIG.displays) {
+            const display = GAME_CONFIG.displays[key];
+            imagePaths.add(display.background);
+            imagePaths.add(display.image);
+            display.answers.forEach(ans => imagePaths.add(ans.image));
+        }
+        
+        // Transition images
+        imagePaths.add(GAME_CONFIG.transitionImages.afterQuestion1);
+        imagePaths.add(GAME_CONFIG.transitionImages.afterQuestion2);
+        imagePaths.add(GAME_CONFIG.transitionImages.afterQuestion3);
+        
+        // Waiting overlay image
+        imagePaths.add('assets/images/bg4.png');
+        
+        // Videos
+        videoPaths.push(GAME_CONFIG.videos.idle);
+        videoPaths.push(GAME_CONFIG.videos.success);
+        videoPaths.push(GAME_CONFIG.videos.failure);
+        
+        const totalAssets = imagePaths.size + videoPaths.length;
+        let loadedAssets = 0;
+        
+        const updateProgress = () => {
+            loadedAssets++;
+            const percent = Math.round((loadedAssets / totalAssets) * 100);
+            if (onProgress) onProgress(percent);
+        };
+        
+        // Create all promises with progress tracking
+        const allPromises = [];
+        
+        // Image promises
+        imagePaths.forEach(src => {
+            allPromises.push(
+                this.preloadImage(src)
+                    .then(() => updateProgress())
+                    .catch(err => {
+                        console.warn('[Cache] Failed to preload image:', src, err);
+                        updateProgress();
+                    })
+            );
+        });
+        
+        // Video promises
+        videoPaths.forEach(src => {
+            allPromises.push(
+                this.preloadVideo(src)
+                    .then(() => updateProgress())
+                    .catch(err => {
+                        console.warn('[Cache] Failed to preload video:', src, err);
+                        updateProgress();
+                    })
+            );
+        });
+        
+        // Wait for all assets
+        await Promise.all(allPromises);
+        
+        this.isPreloaded = true;
+        const loadTime = Date.now() - startTime;
+        console.log(`[Cache] All assets preloaded in ${loadTime}ms`);
+        console.log(`[Cache] Images cached: ${this.images.size}`);
+        console.log(`[Cache] Videos cached: ${this.videos.size}`);
+    }
+};
+
 class QuizGame {
     constructor() {
         this.currentQuestion = 1; // 1, 2, or 3
@@ -32,6 +160,26 @@ class QuizGame {
     }
     
     init() {
+        // Register Service Worker for caching
+        this.registerServiceWorker();
+        
+        // Get loading elements
+        const initialLoader = document.getElementById('initial-loader');
+        const loaderProgress = document.getElementById('loader-progress');
+        
+        // Preload all assets with progress
+        AssetCache.preloadAllAssets((percent) => {
+            if (loaderProgress) {
+                loaderProgress.textContent = `${percent}%`;
+            }
+        }).then(() => {
+            console.log('[Game] Assets ready for instant playback');
+            // Hide the initial loader
+            if (initialLoader) {
+                initialLoader.classList.add('hidden');
+            }
+        });
+        
         // Setup idle layer touch/click
         this.elements.idleLayer.addEventListener('click', () => this.exitIdleMode());
         this.elements.idleLayer.addEventListener('touchend', (e) => {
@@ -41,6 +189,18 @@ class QuizGame {
 
         // Start in idle mode
         this.enterIdleMode();
+    }
+    
+    registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('[SW] Service Worker registered:', registration.scope);
+                })
+                .catch((err) => {
+                    console.warn('[SW] Service Worker registration failed:', err);
+                });
+        }
     }
     
     enterIdleMode() {

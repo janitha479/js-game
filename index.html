@@ -4,9 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Quiz Game</title>
+    
+    <!-- Preload critical assets for faster loading -->
+    <link rel="preload" href="assets/videos/idle.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="assets/images/bg.png" as="image">
+    <link rel="preload" href="assets/images/display1.png" as="image">
+    
+    <!-- Prefetch other videos so they're ready -->
+    <link rel="prefetch" href="assets/videos/success.mp4" as="video">
+    <link rel="prefetch" href="assets/videos/failure.mp4" as="video">
+    
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Initial Loading Screen (shown while caching assets) -->
+    <div id="initial-loader" class="initial-loader">
+        <div class="loader-content">
+            <div class="loader">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="loader-text">Loading Game Assets...</div>
+            <div class="loader-progress" id="loader-progress">0%</div>
+        </div>
+    </div>
+
     <!-- Game Screen -->
     <div id="game-screen" class="screen active">
         <!-- Idle Video Layer -->
