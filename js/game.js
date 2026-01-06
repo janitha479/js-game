@@ -304,3 +304,47 @@ class QuizGame {
 document.addEventListener('DOMContentLoaded', () => {
     window.game = new QuizGame();
 });
+
+function waitForMediaReady(el) {
+    return new Promise((resolve) => {
+        if (!el) return resolve();
+        if ((el.readyState ?? 0) >= 3 || el.complete) return resolve();
+        const evt = el.tagName === 'VIDEO' ? 'canplaythrough' : 'load';
+        const done = () => {
+            el.removeEventListener(evt, done);
+            resolve();
+        };
+        el.addEventListener(evt, done, { once: true });
+        if (el.tagName === 'VIDEO') el.load();
+    });
+}
+
+async function preloadQuestionAssets(question) {
+    const mainImage = new Image();
+    mainImage.src = question.displayImage;
+    const answers = question.answers.map((ans) => {
+        const img = new Image();
+        img.src = ans.image;
+        return waitForMediaReady(img);
+    });
+    await Promise.all([waitForMediaReady(mainImage), ...answers]);
+    return { mainImage };
+}
+
+async function loadNextQuestion(question) {
+    waitingOverlay.classList.add('active');
+    const { mainImage } = await preloadQuestionAssets(question);
+    displayImage.src = mainImage.src;
+    renderAnswers(question.answers);
+    waitingOverlay.classList.remove('active');
+}
+
+async function showResultVideo() {
+    waitingOverlay.classList.add('active');
+    await waitForMediaReady(resultVideo);
+    interactiveLayer.classList.add('hidden');
+    resultLayer.classList.remove('hidden');
+    waitingOverlay.classList.remove('active');
+    resultVideo.currentTime = 0;
+    await resultVideo.play();
+}

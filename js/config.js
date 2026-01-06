@@ -35,7 +35,7 @@ const GAME_CONFIG = {
         1: {
             background: 'assets/images/bg.png',
             image: 'assets/images/display1.png',
-            title: 'Question 1',
+            title: '',
             answers: [
                 { id: 'a1', image: 'assets/images/answers/d1_a1.png', correct: true },
                 { id: 'a2', image: 'assets/images/answers/d1_a2.png', correct: false },
@@ -49,7 +49,7 @@ const GAME_CONFIG = {
         2: {
             background: 'assets/images/bg1.png',
             image: 'assets/images/display2.png',
-            title: 'Question 2',
+            title: '',
             answers: [
                 { id: 'b1', image: 'assets/images/answers/d2_a1.png', correct: false },
                 { id: 'b2', image: 'assets/images/answers/d2_a2.png', correct: true },
@@ -63,7 +63,7 @@ const GAME_CONFIG = {
         3: {
             background: 'assets/images/bg2.png',
             image: 'assets/images/display3.png',
-            title: 'Question 3',
+            title: '',
             answers: [
                 { id: 'c1', image: 'assets/images/answers/d3_a1.png', correct: true },
                 { id: 'c2', image: 'assets/images/answers/d3_a2.png', correct: false },
